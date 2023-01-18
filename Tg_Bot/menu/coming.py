@@ -8,16 +8,18 @@ from ..keyboards import Keyboards
 from Utils.classes import Coming
 from Utils.db_connector import db_comings
 import traceback
+
 kbd = Keyboards()
 
 
 @dp.callback_query_handler(text='coming')
 @admin
-async def coming(cq: CallbackQuery, state:FSMContext):
+async def coming(cq: CallbackQuery, state: FSMContext):
     msg = cq.message
     user_id = msg.chat.id
     await state.update_data(page=0)
-    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери продукт:', reply_markup=kbd.all_products())
+    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери продукт:',
+                                reply_markup=kbd.all_products())
     await AddComing.product.set()
 
 
@@ -28,7 +30,8 @@ async def select_product_(cq: CallbackQuery, state: FSMContext):
     user_id = msg.chat.id
     product = cq.data.split('select_product_')[1]
     await state.update_data(product=product, msg=msg)
-    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Введи количество:', reply_markup=kbd.single_back())
+    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Введи количество:',
+                                reply_markup=kbd.single_back())
     await AddComing.next()
 
 
@@ -43,17 +46,20 @@ async def count(msg: Message, state: FSMContext):
         count = float(count)
         com = Coming(product=data['product'], count=count, user_id=user_id)
         db_comings.add_coming(com)
-        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id, text='Приход записан.', reply_markup=kbd.all_products(page=data['page'] if 'page' in data.keys() else 0))
+        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id, text='Приход записан.',
+                                    reply_markup=kbd.all_products(page=data['page'] if 'page' in data.keys() else 0))
         await AddComing.product.set()
     except:
-        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id,  text=f'Неверный формат. "{msg.text}" - не число', reply_markup=kbd.single_back())
+        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id,
+                                    text=f'Неверный формат. "{msg.text}" - не число', reply_markup=kbd.single_back())
 
 
 @dp.callback_query_handler(Text(startswith='replace_page_'), state=[AddComing.product, AddExpenditure.product])
 @admin
-async def replace_page_(cq: CallbackQuery, state:FSMContext):
+async def replace_page_(cq: CallbackQuery, state: FSMContext):
     msg = cq.message
     user_id = msg.chat.id
     page_new = int(cq.data.split('replace_page_')[1])
     await state.update_data(page=page_new)
-    await bot.edit_message_reply_markup(chat_id=user_id, message_id=msg.message_id, reply_markup=kbd.all_products(page=page_new))
+    await bot.edit_message_reply_markup(chat_id=user_id, message_id=msg.message_id,
+                                        reply_markup=kbd.all_products(page=page_new))

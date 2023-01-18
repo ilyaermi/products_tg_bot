@@ -16,4 +16,5 @@ def admin(input_func):
                 await input_func(state=kwargs['state'], *args)
         else:
             await bot.send_message(chat_id=msg.chat.id, text='У тебя нет прав на использование')
+
     return output_func

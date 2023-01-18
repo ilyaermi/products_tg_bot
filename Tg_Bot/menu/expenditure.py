@@ -8,6 +8,7 @@ from ..keyboards import Keyboards
 from Utils.classes import Expenditure
 from Utils.db_connector import db_expenditures
 import traceback
+
 kbd = Keyboards()
 
 
@@ -17,7 +18,8 @@ async def coming(cq: CallbackQuery, state: FSMContext):
     msg = cq.message
     user_id = msg.chat.id
     await state.update_data(page=0)
-    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери продукт:', reply_markup=kbd.all_products())
+    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери продукт:',
+                                reply_markup=kbd.all_products())
     await AddExpenditure.product.set()
 
 
@@ -28,7 +30,8 @@ async def select_product_(cq: CallbackQuery, state: FSMContext):
     user_id = msg.chat.id
     product = cq.data.split('select_product_')[1]
     await state.update_data(product=product, msg=msg)
-    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери направление:', reply_markup=kbd.all_flows(product=product))
+    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Выбери направление:',
+                                reply_markup=kbd.all_flows(product=product))
     await AddExpenditure.next()
 
 
@@ -39,7 +42,8 @@ async def select_flow_(cq: CallbackQuery, state: FSMContext):
     user_id = msg.chat.id
     flow = cq.data.split('select_flow_')[1]
     await state.update_data(flow=flow, msg=msg)
-    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Введи количество:', reply_markup=kbd.single_back())
+    await bot.edit_message_text(chat_id=user_id, message_id=msg.message_id, text='Введи количество:',
+                                reply_markup=kbd.single_back())
     await AddExpenditure.next()
 
 
@@ -52,11 +56,13 @@ async def _count(msg: Message, state: FSMContext):
     data = await state.get_data()
     try:
         count = float(count)
-        await state.update_data(count = count)
-        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id, text='Введи цену', reply_markup=kbd.single_back())
+        await state.update_data(count=count)
+        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id, text='Введи цену',
+                                    reply_markup=kbd.single_back())
         await AddExpenditure.next()
     except:
-        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id,  text=f'Неверный формат. "{msg.text}" - не число', reply_markup=kbd.single_back())
+        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id,
+                                    text=f'Неверный формат. "{msg.text}" - не число', reply_markup=kbd.single_back())
 
 
 @dp.message_handler(state=AddExpenditure.price)
@@ -68,21 +74,24 @@ async def _price(msg: Message, state: FSMContext):
     data = await state.get_data()
     try:
         price = float(price)
-        exp = Expenditure(product=data['product'], count=data['count'],price=price, user_id=user_id, flow_direction =data['flow'])
+        exp = Expenditure(product=data['product'], count=data['count'], price=price, user_id=user_id,
+                          flow_direction=data['flow'])
         db_expenditures.add_expenditure(exp)
-        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id, text='Расход записан.', reply_markup=kbd.all_products(page=data['page'] if 'page' in data.keys() else 0))
+        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id, text='Расход записан.',
+                                    reply_markup=kbd.all_products(page=data['page'] if 'page' in data.keys() else 0))
         await AddExpenditure.product.set()
     except:
-        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id,  text=f'Неверный формат. "{msg.text}" - не число', reply_markup=kbd.single_back())
-
+        await bot.edit_message_text(chat_id=user_id, message_id=data['msg'].message_id,
+                                    text=f'Неверный формат. "{msg.text}" - не число', reply_markup=kbd.single_back())
 
 
 @dp.callback_query_handler(Text(startswith='replace_page_'), state=AddExpenditure.flow_direction)
 @admin
-async def replace_page_(cq: CallbackQuery, state:FSMContext):
+async def replace_page_(cq: CallbackQuery, state: FSMContext):
     msg = cq.message
     user_id = msg.chat.id
     page_new = int(cq.data.split('replace_page_')[1])
     await state.update_data(page=page_new)
     data = await state.get_data()
-    await bot.edit_message_reply_markup(chat_id=user_id, message_id=msg.message_id, reply_markup=kbd.all_flows(page=page_new, product=data['product']))
+    await bot.edit_message_reply_markup(chat_id=user_id, message_id=msg.message_id,
+                                        reply_markup=kbd.all_flows(page=page_new, product=data['product']))

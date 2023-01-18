@@ -11,8 +11,6 @@ bot = Bot(BOT_TOKEN, parse_mode='HTML', disable_web_page_preview=True)
 dp = Dispatcher(bot, storage=storage, loop=loop)
 
 
-
-
 def start_bot():
     from .handlers import on_startup
     executor.start_polling(dp, on_startup=on_startup)

@@ -54,6 +54,7 @@ async def back_to_menu(cq: CallbackQuery):
         reply_markup=menu_markup
     )
 
+
 states = [AddComing.count,
           AddComing.product,
           AddExpenditure.count,
@@ -64,7 +65,7 @@ states = [AddComing.count,
 
 @dp.callback_query_handler(text='back_to_menu', state=states)
 @admin
-async def back(cq: CallbackQuery, state:FSMContext):
+async def back(cq: CallbackQuery, state: FSMContext):
     await state.finish()
     await back_to_menu(cq)
 
